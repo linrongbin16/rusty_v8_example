@@ -1,0 +1,14 @@
+[package]
+name = "rusty_v8_example"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+
+[dependencies]
+# deno: https://github.com/denoland/deno/blob/v2.5.0/Cargo.toml
+# deno_core: https://github.com/denoland/deno_core/blob/0.357.0/Cargo.toml
+# deno_ast: https://github.com/denoland/deno_ast/blob/0.50.1/Cargo.toml
+
+v8 = { version = "=140.0.0", default-features = false, features = [
+  "use_custom_libcxx",
+] }
