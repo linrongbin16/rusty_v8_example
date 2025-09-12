@@ -27,3 +27,9 @@ fn main() {
 
     println!("v8 version:{}", v8::VERSION_STRING);
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    pub fn test1() {}
+}
