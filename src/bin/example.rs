@@ -4,7 +4,7 @@ fn main() {
     static V8_INIT: Once = Once::new();
 
     V8_INIT.call_once(move || {
-        let mut flags = String::from(concat!(
+        let flags = String::from(concat!(
             " --no-validate-asm",
             " --turbo-fast-api-calls",
             " --harmony-temporal",
