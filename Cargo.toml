@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85.0"
 
+[features]
+default = []
+v8_unsafe_use_unprotected_platform = []
+
 [dependencies]
 # deno: https://github.com/denoland/deno/blob/v2.5.0/Cargo.toml
 # deno_core: https://github.com/denoland/deno_core/blob/0.357.0/Cargo.toml
