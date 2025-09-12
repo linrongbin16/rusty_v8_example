@@ -39,4 +39,4 @@ jobs:
       - uses: actions/checkout@v5
       - name: Cargo test
         run: |
-          cargo test --verbose --features 'default v8_unsafe_use_unprotected_platform' -p rsvim_core
+          cargo test --verbose --features 'default v8_unsafe_use_unprotected_platform'
