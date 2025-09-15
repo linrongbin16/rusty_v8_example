@@ -15,16 +15,8 @@ env:
   RUSTUP_MAX_RETRIES: 3
   GH_TOKEN: ${{ github.token }}
 jobs:
-  prepare:
-    name: Release Nightly
-    runs-on: ubuntu-22.04
-    # if: ${{ github.ref == 'refs/heads/main' }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-  upload-assets:
-    name: ${{ matrix.target }}
+  release-nightly:
+    name: Release ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     env:
       # Relate issue: https://github.com/denoland/rusty_v8/issues/1849
