@@ -67,7 +67,7 @@ jobs:
         if: ${{ matrix.os == 'windows-2022' }}
         run: |
           mkdir rsvim-${{ matrix.target }}
-          cp target/nightly/example rsvim-${{ matrix.target }}
+          cp target/nightly/example.exe rsvim-${{ matrix.target }}
           cp README.md rsvim-${{ matrix.target }}
           tar -czvf rsvim-${{ matrix.target }}.tar.gz rsvim-${{ matrix.target }}
           7z a rsvim-${{ matrix.target }}.zip rsvim-${{ matrix.target }}
