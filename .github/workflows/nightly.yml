@@ -1,0 +1,97 @@
+name: Nightly Build
+permissions:
+  contents: write
+on:
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: false
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  CARGO_NET_RETRY: 3
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "full"
+  RUSTUP_MAX_RETRIES: 3
+  GH_TOKEN: ${{ github.token }}
+# defaults:
+#   run:
+#     shell: bash
+jobs:
+  prepare:
+    name: Release Nightly
+    runs-on: ubuntu-22.04
+    # if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - run: gh release delete nightly --cleanup-tag -y || true
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          prerelease: true
+          makeLatest: true
+          name: nightly
+          removeArtifacts: true
+          tag: nightly
+          commit: ${{ github.ref_name }}
+          body: ""
+          omitBody: true
+  upload-assets:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    env:
+      # Relate issue: https://github.com/denoland/rusty_v8/issues/1849
+      RUSTFLAGS: >-
+        -Cdebuginfo=0 ${{ matrix.os == 'windows-2022' && '-Clink-arg=/DEBUG:NONE ' || '' }}
+    needs: prepare
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-22.04-arm
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+          # - target: aarch64-unknown-linux-musl
+          #   os: ubuntu-22.04
+          # - target: x86_64-unknown-linux-musl
+          #   os: ubuntu-22.04
+          - target: aarch64-apple-darwin
+            os: macos-14
+          - target: x86_64-apple-darwin
+            os: macos-13
+          - target: x86_64-pc-windows-msvc
+            os: windows-2022
+            # - target: aarch64-pc-windows-msvc
+            #   os: windows-2022
+            # - target: x86_64-unknown-freebsd
+            #   os: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Rust
+        run: |
+          rustup update --no-self-update stable
+          rustup default stable
+          rustup component add --toolchain stable rust-src clippy
+      # Relate issue: https://github.com/denoland/rusty_v8/issues/1849
+      # - run: echo "RUSTFLAGS=${RUSTFLAGS} -C target-feature=+crt-static -C debuginfo=0 -C link-arg=/DEBUG:NONE" >> "${GITHUB_ENV}"
+      #   if: endsWith(matrix.target, 'windows-msvc')
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: rusty_v8_example
+          target: ${{ matrix.target }}
+          tar: all
+          zip: windows
+          token: ${{ secrets.GITHUB_TOKEN }}
+          include: README.md,CHANGELOG.md,LICENSE.txt
+          checksum: sha256
+          ref: refs/tags/nightly
+          profile: nightly
+          locked: true
+      - name: After Upload
+        run: |
+          echo "ls -lah --color=always"
+          ls -lah --color=always
