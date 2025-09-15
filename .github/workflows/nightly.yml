@@ -82,9 +82,10 @@ jobs:
           cp README.md rsvim-${{ matrix.target }}
           tar -czvf rsvim-${{ matrix.target }}.tar.gz rsvim-${{ matrix.target }}
           7z a rsvim-${{ matrix.target }}.zip rsvim-${{ matrix.target }}
-      - name: Remove old release
+      - name: Remove Old Release
         run: gh release delete nightly --cleanup-tag -y || true
-      - uses: ncipollo/release-action@v1
+      - name: Create New Release
+        uses: ncipollo/release-action@v1
         if: ${{ matrix.os != 'windows-2022' }}
         with:
           allowUpdates: true
@@ -97,7 +98,8 @@ jobs:
           body: ""
           omitBody: true
           artifacts: rsvim-${{ matrix.target }}.tar.gz
-      - uses: ncipollo/release-action@v1
+      - name: Create New Release (Windows)
+        uses: ncipollo/release-action@v1
         if: ${{ matrix.os == 'windows-2022' }}
         with:
           allowUpdates: true
