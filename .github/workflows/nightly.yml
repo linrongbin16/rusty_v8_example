@@ -15,15 +15,26 @@ env:
   RUSTUP_MAX_RETRIES: 3
   GH_TOKEN: ${{ github.token }}
 jobs:
-  delete-old-release:
+  prepare:
     name: Delete Old Release
     runs-on: ubuntu-latest
     steps:
       - run: gh release delete nightly --cleanup-tag -y || true
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          prerelease: true
+          makeLatest: true
+          name: nightly
+          removeArtifacts: false
+          tag: nightly
+          commit: ${{ github.ref_name }}
+          body: ""
+          omitBody: true
   upload-assets:
     name: Release ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    needs: delete-old-release
+    needs: prepare
     env:
       # Relate issue: https://github.com/denoland/rusty_v8/issues/1849
       RUSTFLAGS: >-
