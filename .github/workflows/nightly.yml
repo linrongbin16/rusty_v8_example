@@ -15,9 +15,15 @@ env:
   RUSTUP_MAX_RETRIES: 3
   GH_TOKEN: ${{ github.token }}
 jobs:
-  release-nightly:
+  delete-old-release:
+    name: Delete Old Release
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh release delete nightly --cleanup-tag -y || true
+  upload-assets:
     name: Release ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    needs: delete-old-release
     env:
       # Relate issue: https://github.com/denoland/rusty_v8/issues/1849
       RUSTFLAGS: >-
@@ -70,8 +76,6 @@ jobs:
           cp README.md rsvim-${{ matrix.target }}
           tar -czvf rsvim-${{ matrix.target }}.tar.gz rsvim-${{ matrix.target }}
           7z a rsvim-${{ matrix.target }}.zip rsvim-${{ matrix.target }}
-      - name: Remove Old Release
-        run: gh release delete nightly --cleanup-tag -y || true
       - name: Create New Release
         uses: ncipollo/release-action@v1
         if: ${{ matrix.os != 'windows-2022' }}
@@ -80,7 +84,7 @@ jobs:
           prerelease: true
           makeLatest: true
           name: nightly
-          removeArtifacts: true
+          removeArtifacts: false
           tag: nightly
           commit: ${{ github.ref_name }}
           body: ""
@@ -94,7 +98,7 @@ jobs:
           prerelease: true
           makeLatest: true
           name: nightly
-          removeArtifacts: true
+          removeArtifacts: false
           tag: nightly
           commit: ${{ github.ref_name }}
           body: ""
