@@ -26,18 +26,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - run: gh release delete nightly --cleanup-tag -y || true
-      - uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          prerelease: true
-          makeLatest: true
-          name: nightly
-          removeArtifacts: true
-          tag: nightly
-          commit: ${{ github.ref_name }}
-          body: ""
-          omitBody: true
   upload-assets:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
@@ -76,18 +64,51 @@ jobs:
           rustup update --no-self-update stable
           rustup default stable
           rustup component add --toolchain stable rust-src clippy
-      # Relate issue: https://github.com/denoland/rusty_v8/issues/1849
-      # - run: echo "RUSTFLAGS=${RUSTFLAGS} -C target-feature=+crt-static -C debuginfo=0 -C link-arg=/DEBUG:NONE" >> "${GITHUB_ENV}"
-      #   if: endsWith(matrix.target, 'windows-msvc')
-      - uses: taiki-e/upload-rust-binary-action@v1
+      - name: Cargo Build
+        run: |
+          cargo build --profile nightly
+      - name: Create Artifact
+        if: ${{ matrix.os != 'windows-2022' }}
+        run: |
+          mkdir rsvim-${{ matrix.target }}
+          cp target/nightly/example rsvim-${{ matrix.target }}
+          cp README.md rsvim-${{ matrix.target }}
+          tar -czvf rsvim-${{ matrix.target }}.tar.gz rsvim-${{ matrix.target }}
+      - name: Create Artifact (Windows)
+        if: ${{ matrix.os == 'windows-2022' }}
+        run: |
+          mkdir rsvim-${{ matrix.target }}
+          cp target/nightly/example rsvim-${{ matrix.target }}
+          cp README.md rsvim-${{ matrix.target }}
+          tar -czvf rsvim-${{ matrix.target }}.tar.gz rsvim-${{ matrix.target }}
+          7z a rsvim-${{ matrix.target }}.zip rsvim-${{ matrix.target }}
+      - name: Remove old release
+        run: gh release delete nightly --cleanup-tag -y || true
+      - uses: ncipollo/release-action@v1
+        if: ${{ matrix.os != 'windows-2022' }}
         with:
-          bin: example
-          target: ${{ matrix.target }}
-          tar: all
-          zip: windows
-          token: ${{ secrets.GITHUB_TOKEN }}
-          include: README.md
-          checksum: sha256
-          ref: refs/tags/nightly
-          profile: nightly
-          locked: true
+          allowUpdates: true
+          prerelease: true
+          makeLatest: true
+          name: nightly
+          removeArtifacts: true
+          tag: nightly
+          commit: ${{ github.ref_name }}
+          body: ""
+          omitBody: true
+          artifacts: rsvim-${{ matrix.target }}.tar.gz
+      - uses: ncipollo/release-action@v1
+        if: ${{ matrix.os == 'windows-2022' }}
+        with:
+          allowUpdates: true
+          prerelease: true
+          makeLatest: true
+          name: nightly
+          removeArtifacts: true
+          tag: nightly
+          commit: ${{ github.ref_name }}
+          body: ""
+          omitBody: true
+          artifacts: |
+            rsvim-${{ matrix.target }}.tar.gz
+            rsvim-${{ matrix.target }}.zip

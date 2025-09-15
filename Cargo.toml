@@ -18,9 +18,5 @@ v8 = { version = "=140.0.0", default-features = false, features = [
 
 # Nightly
 [profile.nightly]
-inherits = "dev"
-lto = true
-strip = true
-incremental = true
-codegen-units = 1
-opt-level = 's'
+inherits = "release"
+debug = true
